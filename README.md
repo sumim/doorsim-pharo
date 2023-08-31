@@ -43,6 +43,16 @@ The code provided as an example here is written in [Pharo Smalltalk](https://pha
 - ドアのノブを回す（固定解除）→ドアを押す（ドアが開く）→ドアを引く（ドアが閉まり、自動的に固定される）
 - ドアは閉まった状態でノブを回さずに押しても開かない（無視される）
 
+```
+  door is a Door...
+  door knob turn. door canBeOpen. => true
+  door knob unturn. door canBeOpen. => false
+  door push; isOpen. => false
+  door knob turn. door push; isOpen. => true
+  door pull; isClose. => true
+  door canBeOpen. => false
+```
+
 ●以上のように振る舞うドアに対して、以下の拡張をする際にどの程度コードの追加を必要とするかを見る
 
 ▼ドアへのドアクローザー設置
@@ -51,15 +61,45 @@ The code provided as an example here is written in [Pharo Smalltalk](https://pha
 - ドアが閉まるまでの時間は自由に変えられ、変更は直ちに反映される
 - ドアが自動で閉まる途中でドアを押すか閉まるまでの時間を変更すると、閉まるまでの残り時間はリセットされる
 
+```
+door is a DoorWithCloser with 0.3 seconds delay...
+door knob turn. door push; isOpen. => true
+0.1 second after, door isOpen. => true
+0.4 seconds after, door isClose. => true
+door knob turn. door push; delaySec: 0.6; isOpen. => true
+0.4 second after, door isClose. => false
+0.7 seconds after, door isClose. => true"
+```
+
 ▼ドアへのドアストッパー設置
 - 振る舞いを変更する拡張を見る
 - ドアが開いた状態でストッパー設置→ドアを引いても閉まらない（無視される）
 - ドアストッパー解除→ドアを引くと閉まる
 - ドアストッパー設置状態でドアを押すとストッパー自動解除
 
+```
+door is a DoorWithStopper...
+door knob turn. door push; isOpen. => true
+door beStopperedOn; pull; isClose. => false
+door beStopperedOff; pull; isClose. => true
+door knob turn. door push; isOpen. => true
+door beStopperedOn; pull; isClose. => false
+door push; pull; isClose. => true
+```
+
 ▼ドアクローザー、ドアストッパーを同時に設置したドア
 - 多重継承を見る
 - ストッパーが効いてるときはクローザーの動きは抑制される
+
+```
+door is a DoorWithStopperCloser with 0.3 seconds delay...
+door knob turn. door push; isOpen. => true
+door beStopperedOn. then 0.4 seconds after, door isOpen. => true
+door beStopperedOff. then 0.4 seconds after, door isClose. => true
+door knob turn. door push; isOpen. => true
+door beStopperedOn. then 0.4 seconds after, door isOpen. => true
+door push. then 0.4 seconds after, door isClose. => true"
+```
 
 ●他の言語での実装例
 - Ruby http://ideone.com/rJwQfi
